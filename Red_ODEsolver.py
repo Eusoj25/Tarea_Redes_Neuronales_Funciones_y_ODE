@@ -43,9 +43,13 @@ class ODEsolver(Sequential):
 model = ODEsolver()
 
 model.add(Dense(10, activation='tanh', input_shape = (1,)))
+model.add(Dense(20, activation='tanh'))
 model.add(Dense(10, activation='tanh'))
+model.add(Dense(20, activation='tanh'))
 model.add(Dense(10, activation='tanh'))
+model.add(Dense(20, activation='tanh'))
 model.add(Dense(10, activation='tanh'))
+model.add(Dense(20, activation='tanh'))
 model.add(Dense(1, activation='linear'))
 
 model.summary()
@@ -53,7 +57,7 @@ model.summary()
 model.compile(optimizer=RMSprop(learning_rate=0.0001), metrics=["loss"])
 
 x = tf.linspace(-5,5,100)
-history = model.fit(x,epochs = 1500, verbose = 1)
+history = model.fit(x,epochs = 3000, verbose = 1)
 
 x_testv = tf.linspace(-5,5,100)
 a = model.predict(x_testv)
