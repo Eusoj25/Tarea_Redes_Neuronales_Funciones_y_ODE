@@ -23,7 +23,7 @@ class REDfunciones(Sequential):
         with tf.GradientTape() as tape:
             #Compute the loss value
             y_pred = self(x, training=True)
-            eq = y_pred - (3*tf.math.cos(np.pi*x))
+            eq = y_pred - (1 + 2*x + 4*x**3)
             loss = keras.losses.mean_squared_error(0., eq)
             
 
@@ -46,12 +46,15 @@ model.summary()
 model.compile(optimizer=RMSprop(), metrics=["loss"])
 
 x = tf.linspace(-1,1,100)
-history = model.fit(x,epochs = 1000, verbose = 1)
+history = model.fit(x,epochs = 1500, verbose = 1)
 
 x_testv = tf.linspace(-1,1,100)
 a = model.predict(x_testv)
 plt.plot(x_testv,a)
-plt.plot(x_testv,3*tf.math.cos(np.pi*x))
+plt.plot(x_testv,1 + 2*x + 4*x**3)
+plt.suptitle('Aproximación de una función con una RNA')
+leyendas = ['y_model(x)','y(x)']
+plt.legend(loc = "upper right", labels = leyendas)
 plt.show()
 
 
