@@ -19,25 +19,33 @@ class ODEsolver(Sequential):
     def train_step(self, data):
         batch_size = tf.shape(data)[0]
         x = tf.random.uniform((batch_size,1), minval= -5, maxval= 5)
+        x_0 = tf.zeros((batch_size,1))
 
         with tf.GradientTape() as tape:
             #Compute the loss value
-            with tf.GradientTape() as tape2:
-                tape2.watch(x)
-                y_pred = self(x, training=True)
-            dy = tape2.gradient(y_pred,x)
-            x_0 = tf.zeros((batch_size,1))
-            y_0 = self(x_0, training=True)
-            eq = x*dy + y_pred - (x**2)*tf.math.cos(x)
-            ic = y_0 - 0
-            loss = keras.losses.mean_squared_error(0., eq) + keras.losses.mean_squared_error(0., ic)
+            with tf.GradientTape(persistent=True) as g:
+                g.watch(x)
+                g.watch(x_0)
+
+                with tf.GradientTape() as gg:
+                    gg.watch(x)    
+                    y_pred = self(x, training=True)
+                y_x = gg.gradient(y_pred,x)
+                y_0 = self(x_0, training=True)
+
+            y_xx = g.gradient(y_x, x)
+            y_xo = g.gradient(y_0,x_0)
+            eq = y_xx + y_pred
+            ic = y_0 - 1.0 
+            ic1 = y_xo + 0.5
+            loss = keras.losses.mean_squared_error(0., eq) + keras.losses.mean_squared_error(0., ic) + keras.losses.mean_squared_error(0., ic1)
 
         # Apply grads
         grads = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
         #update metrics
         self.loss_tracker.update_state(loss)
-        #Return a dict mapping metric names to current value
+         #Return a dict mapping metric names to current value
         return {"loss": self.loss_tracker.result()}
 
 model = ODEsolver()
@@ -62,7 +70,7 @@ history = model.fit(x,epochs = 3000, verbose = 1)
 x_testv = tf.linspace(-5,5,100)
 a = model.predict(x_testv)
 plt.plot(x_testv,a)
-plt.plot(x_testv, x*tf.math.sin(x)+2*tf.math.cos(x)-2*tf.math.sin(x)/x)
+plt.plot(x_testv, np.cos(x) -0.5* tf.math.sin(x) )
 plt.suptitle('Solución de una ODE con una RNA')
 leyendas = ['y_model(x)','y(x)']
 plt.legend(loc = "upper right", labels = leyendas)
